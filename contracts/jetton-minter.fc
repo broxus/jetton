@@ -209,11 +209,11 @@
             .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
             .store_uint(op::take_info(), 32)
             .store_uint(query_id, 64)
-            .store_ref(info_slice~load_ref())
-            .store_ref(info_slice~load_ref())
             .store_uint(info_slice~load_uint(8), 8)
             .store_uint(info_slice~load_uint(256), 256)
             .store_uint(info_slice~load_uint(160), 160)
+            .store_ref(info_slice~load_ref())
+            .store_ref(info_slice~load_ref())
             .end_cell();
 
         send_raw_message(msg, 64);
