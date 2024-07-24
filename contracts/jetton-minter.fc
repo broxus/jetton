@@ -200,7 +200,13 @@
     if (op == op::provide_info()) {
         throw_unless(75, msg_value > fwd_fee + const::provide_info_gas_consumption());
 
-        var info_slice = info.begin_parse();
+        (
+            cell name,
+            cell symbol,
+            int decimals,
+            int chain_id,
+            int base_token
+        ) = parse_jetton_info(info);
 
         var msg = begin_cell()
             .store_uint(0x18, 6)
@@ -209,11 +215,11 @@
             .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
             .store_uint(op::take_info(), 32)
             .store_uint(query_id, 64)
-            .store_uint(info_slice~load_uint(8), 8)
-            .store_uint(info_slice~load_uint(256), 256)
-            .store_uint(info_slice~load_uint(160), 160)
-            .store_ref(info_slice~load_ref())
-            .store_ref(info_slice~load_ref())
+            .store_uint(decimals, 8)
+            .store_uint(chain_id, 256)
+            .store_uint(base_token, 160)
+            .store_ref(name)
+            .store_ref(symbol)
             .end_cell();
 
         send_raw_message(msg, 64);
@@ -263,7 +269,13 @@
         cell info
     ) = load_data();
 
-    var info_slice = info.begin_parse();
+    (
+        cell name,
+        cell symbol,
+        int decimals,
+        int chain_id,
+        int base_token
+    ) = parse_jetton_info(info);
 
     return (
         total_supply,
@@ -271,11 +283,11 @@
         admin_address,
         content,
         jetton_wallet_code,
-        info_slice~load_ref(),
-        info_slice~load_ref(),
-        info_slice~load_uint(8),
-        info_slice~load_uint(256),
-        info_slice~load_uint(160)
+        name,
+        symbol,
+        decimals,
+        chain_id,
+        base_token
     );
 }
 

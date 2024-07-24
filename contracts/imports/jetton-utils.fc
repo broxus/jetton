@@ -1,3 +1,4 @@
+#include "stdlib.fc";
 cell pack_jetton_wallet_data(int balance, slice owner_address, slice jetton_master_address, cell jetton_wallet_code) inline {
    return  begin_cell()
             .store_coins(balance)
@@ -28,3 +29,14 @@ slice calculate_user_jetton_wallet_address(slice owner_address, slice jetton_mas
   return calculate_jetton_wallet_address(calculate_jetton_wallet_state_init(owner_address, jetton_master_address, jetton_wallet_code));
 }
 
+(cell, cell, int, int, int) parse_jetton_info(cell info) inline {
+    slice is = info.begin_parse();
+
+    return (
+        is~load_ref(),
+        is~load_ref(),
+        is~load_uint(8),
+        is~load_uint(256),
+        is~load_uint(160)
+    );
+}
