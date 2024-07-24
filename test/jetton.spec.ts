@@ -47,13 +47,27 @@ describe("Jetton", () => {
 
   it("should get minter initialization data correctly", async () => {
     const call = await minterContract.contract.invokeGetMethod("get_jetton_data", []);
-    const { totalSupply, address, metadata } = parseJettonDetails(call);
+    const {
+      totalSupply,
+      address,
+      metadata,
+      name,
+      symbol,
+      decimals,
+      chainId,
+      baseToken
+    } = parseJettonDetails(call);
 
     expect(totalSupply).to.be.bignumber.equal(new BN(0));
     expect(address.toFriendly()).to.equal(OWNER_ADDRESS.toFriendly());
     expect(metadata.name).to.equal("MY_JETTON");
     expect(metadata.symbol).to.equal("MJT");
     expect(metadata.description).to.equal("My Long Description".repeat(100));
+    expect(name).to.equal("MY_JETTON");
+    expect(symbol).to.equal("MJT");
+    expect(decimals).to.be.bignumber.equal(new BN(9));
+    expect(chainId).to.be.bignumber.equal(new BN(157));
+    expect(baseToken).to.be.bignumber.equal(new BN(228));
   });
 
   it("offchain and onchain jwallet should return the same address", async () => {

@@ -3,7 +3,7 @@
 
 // storage (according to save_data() contract method)
 
-storage#_ total_supply:Grams admin_address:MsgAddress content:^Cell jetton_wallet_code:^Cell = Storage
+storage#_ total_supply:Grams admin_address:MsgAddress content:^Cell jetton_wallet_code:^Cell info:^Cell = Storage
 
 // ops
 
@@ -18,3 +18,5 @@ change_admin#3 query_id:uint64 new_admin_address:MsgAddress = InternalMsgBody
 change_content#4 query_id:uint64 new_content:^Cell = InternalMsgBody
 
 provide_wallet_address query_id:uint64 owner_address:MsgAddress include_owner_address:Bool = InternalMsgBody
+
+provide_info query_id:uint64 = InternalMsgBody

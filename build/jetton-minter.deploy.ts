@@ -121,11 +121,20 @@ export function jettonMinterInitData(
   owner: Address,
   metadata: { [s in JettonMetaDataKeys]?: string }
 ): Cell {
+  const info = beginCell()
+    .storeRef(beginCell().storeBuffer(Buffer.from(metadata.name || "", "utf8")).endCell())
+    .storeRef(beginCell().storeBuffer(Buffer.from(metadata.symbol || "", "utf8")).endCell())
+    .storeUint8(9)
+    .storeUint(157, 256)
+    .storeUint(228, 160)
+    .endCell();
+
   return beginCell()
     .storeCoins(0)
     .storeAddress(owner)
     .storeRef(buildTokenMetadataCell(metadata))
     .storeRef(JETTON_WALLET_CODE)
+    .storeRef(info)
     .endCell();
 }
 
