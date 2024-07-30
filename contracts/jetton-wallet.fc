@@ -169,8 +169,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
   int query_id = in_msg_body~load_uint(64);
   int jetton_amount = in_msg_body~load_coins();
   slice response_address = in_msg_body~load_msg_addr();
-  ;; ignore custom payload
-  ;; slice custom_payload = in_msg_body~load_dict();
+  cell payload = in_msg_body~load_maybe_ref();
   balance -= jetton_amount;
   throw_unless(705, equal_slices(owner_address, sender_address));
   throw_unless(706, balance >= 0);
@@ -182,6 +181,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
       .store_coins(jetton_amount)
       .store_slice(owner_address)
       .store_slice(response_address)
+      .store_maybe_ref(payload)
       .end_cell();
 
   var msg = begin_cell()

@@ -145,18 +145,38 @@
         );
 
         slice response_address = in_msg_body~load_msg_addr();
+        cell payload = in_msg_body~load_maybe_ref();
 
         if (response_address.preload_uint(2) != 0) {
             var msg = begin_cell()
                 .store_uint(0x10, 6) ;; nobounce - int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool src:MsgAddress -> 011000
                 .store_slice(response_address)
                 .store_coins(0)
-                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-                .store_uint(op::excesses(), 32)
-                .store_uint(query_id, 64)
-                .end_cell();
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1);
 
-            send_raw_message(msg, 2 + 64);
+            if (payload.cell_null?()) {
+                msg = msg
+                    .store_uint(op::excesses(), 32)
+                    .store_uint(query_id, 64);
+            } else {
+                msg = msg
+                    .store_uint(op::on_accept_tokens_burn(), 32)
+                    .store_uint(jetton_amount, 128) ;; amount
+                    .store_slice(from_address) ;; wallet owner
+                    .store_ref(
+                        begin_cell()
+                            .store_slice(sender_address) ;; wallet
+                            .store_ref(
+                                begin_cell()
+                                    .store_slice(from_address) ;; remaining gas to
+                                    .store_ref(payload) ;; payload
+                                    .end_cell()
+                            )
+                            .end_cell()
+                    );
+            }
+
+            send_raw_message(msg.end_cell(), 2 + 64);
         }
 
         return ();
