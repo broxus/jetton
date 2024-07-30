@@ -38,9 +38,8 @@ describe("Jetton", () => {
 
   beforeEach(async () => {
     const dataCell = jettonMinterInitData(OWNER_ADDRESS, {
-      name: "MY_JETTON",
-      symbol: "MJT",
-      description: "My Long Description".repeat(100)
+      name: "jUSDT",
+      symbol: "USDT",
     });
     minterContract = (await JettonMinter.create(JETTON_MINTER_CODE, dataCell)) as JettonMinter; // TODO: 🤮;
   });
@@ -51,23 +50,14 @@ describe("Jetton", () => {
       totalSupply,
       address,
       metadata,
-      name,
-      symbol,
-      decimals,
-      chainId,
-      baseToken
     } = parseJettonDetails(call);
 
     expect(totalSupply).to.be.bignumber.equal(new BN(0));
     expect(address.toFriendly()).to.equal(OWNER_ADDRESS.toFriendly());
-    expect(metadata.name).to.equal("MY_JETTON");
-    expect(metadata.symbol).to.equal("MJT");
-    expect(metadata.description).to.equal("My Long Description".repeat(100));
-    expect(name).to.equal("MY_JETTON");
-    expect(symbol).to.equal("MJT");
-    expect(decimals).to.be.bignumber.equal(new BN(9));
-    expect(chainId).to.be.bignumber.equal(new BN(157));
-    expect(baseToken).to.be.bignumber.equal(new BN(228));
+    expect(metadata.name).to.equal("jUSDT");
+    expect(metadata.symbol).to.equal("USDT");
+    expect(metadata.image).to.equal("https://raw.githubusercontent.com/FairyFromAlfeya/crypto-assets/main/assets/USDT.svg");
+    expect(metadata.decimals).to.equal("9");
   });
 
   it("offchain and onchain jwallet should return the same address", async () => {

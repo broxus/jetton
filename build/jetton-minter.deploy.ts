@@ -22,7 +22,7 @@ const jettonParams = {
   description: "My jetton",
 };
 
-export type JettonMetaDataKeys = "name" | "description" | "image" | "symbol";
+export type JettonMetaDataKeys = "name" | "description" | "image" | "symbol" | "decimals";
 
 const jettonOnChainMetadataSpec: {
   [key in JettonMetaDataKeys]: "utf8" | "ascii" | undefined;
@@ -31,6 +31,7 @@ const jettonOnChainMetadataSpec: {
   description: "utf8",
   image: "ascii",
   symbol: "utf8",
+  decimals: "utf8"
 };
 
 const sha256 = (str: string) => {
@@ -132,9 +133,8 @@ export function jettonMinterInitData(
   return beginCell()
     .storeCoins(0)
     .storeAddress(owner)
-    .storeRef(buildTokenMetadataCell(metadata))
-    .storeRef(JETTON_WALLET_CODE)
     .storeRef(info)
+    .storeRef(JETTON_WALLET_CODE)
     .endCell();
 }
 

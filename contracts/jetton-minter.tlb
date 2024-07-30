@@ -3,7 +3,7 @@
 
 // storage (according to save_data() contract method)
 
-storage#_ total_supply:Grams admin_address:MsgAddress content:^Cell jetton_wallet_code:^Cell info:^Cell = Storage
+storage#_ total_supply:Grams admin_address:MsgAddress content:^Cell jetton_wallet_code:^Cell = Storage
 
 // ops
 
