@@ -188,6 +188,8 @@ const gas_consumption = 10000000; ;; 0.01 TON
 
   msg_value -= (storage_fee + gas_consumption);
 
+  raw_reserve(max(ton_balance_before_msg, min_tons_for_storage), 2);
+
   if (forward_ton_amount) {
     msg_value -= (forward_ton_amount + fwd_fee);
 
@@ -209,7 +211,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
       .store_ref(msg_body)
       .end_cell();
 
-    send_raw_message(msg, 64 + 2);
+    send_raw_message(msg, 128 + 2);
   } elseif ((response_address.preload_uint(2) != 0) & (msg_value > 0)) {
     var msg = begin_cell()
       .store_uint(0x10, 6) ;; nobounce - int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool src:MsgAddress -> 010000
@@ -220,7 +222,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
       .store_uint(query_id, 64)
       .end_cell();
 
-    send_raw_message(msg, 64 + 2);
+    send_raw_message(msg, 128 + 2);
   }
 
   save_data(
