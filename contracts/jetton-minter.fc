@@ -318,6 +318,17 @@
     );
 }
 
+(cell, cell, int, int, int) get_jetton_meta() method_id {
+    (
+        int total_supply,
+        slice admin_address,
+        cell content,
+        cell jetton_wallet_code
+    ) = load_data();
+
+    return parse_jetton_info(content);
+}
+
 slice get_wallet_address(slice owner_address) method_id {
     (
         int total_supply,
