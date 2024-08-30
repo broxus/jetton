@@ -1,32 +1,67 @@
 #include "stdlib.fc";
-cell pack_jetton_wallet_data(int balance, slice owner_address, slice jetton_master_address, cell jetton_wallet_code) inline {
-   return  begin_cell()
-            .store_coins(balance)
-            .store_slice(owner_address)
-            .store_slice(jetton_master_address)
-            .store_ref(jetton_wallet_code)
-           .end_cell();
+#include "params.fc";
+
+cell pack_jetton_wallet_data(
+    int balance,
+    slice owner_address,
+    slice jetton_master_address,
+    cell jetton_wallet_code,
+    cell jetton_platform_code,
+    int version
+) inline {
+    return begin_cell()
+        .store_coins(balance)
+        .store_slice(owner_address)
+        .store_slice(jetton_master_address)
+        .store_ref(jetton_wallet_code)
+        .store_ref(jetton_platform_code)
+        .store_uint(version, 32)
+        .end_cell();
 }
 
-cell calculate_jetton_wallet_state_init(slice owner_address, slice jetton_master_address, cell jetton_wallet_code) inline {
-  return begin_cell()
-          .store_uint(0, 2)
-          .store_dict(jetton_wallet_code)
-          .store_dict(pack_jetton_wallet_data(0, owner_address, jetton_master_address, jetton_wallet_code))
-          .store_uint(0, 1)
-         .end_cell();
+cell calculate_jetton_wallet_state_init(
+    slice owner_address,
+    slice jetton_master_address,
+    cell jetton_platform_code
+) inline {
+    cell data = pack_jetton_wallet_data(
+        0,
+        owner_address,
+        jetton_master_address,
+        begin_cell().end_cell(),
+        jetton_platform_code,
+        0
+    );
+
+    return begin_cell()
+        .store_uint(0, 2)
+        .store_dict(jetton_platform_code)
+        .store_dict(data)
+        .store_uint(0, 1)
+        .end_cell();
 }
 
 slice calculate_jetton_wallet_address(cell state_init) inline {
-  return begin_cell().store_uint(4, 3)
-                     .store_int(workchain(), 8)
-                     .store_uint(cell_hash(state_init), 256)
-                     .end_cell()
-                     .begin_parse();
+    return begin_cell()
+        .store_uint(4, 3)
+        .store_int(workchain(), 8)
+        .store_uint(cell_hash(state_init), 256)
+        .end_cell()
+        .begin_parse();
 }
 
-slice calculate_user_jetton_wallet_address(slice owner_address, slice jetton_master_address, cell jetton_wallet_code) inline {
-  return calculate_jetton_wallet_address(calculate_jetton_wallet_state_init(owner_address, jetton_master_address, jetton_wallet_code));
+slice calculate_user_jetton_wallet_address(
+    slice owner_address,
+    slice jetton_master_address,
+    cell jetton_platform_code
+) inline {
+    return calculate_jetton_wallet_address(
+        calculate_jetton_wallet_state_init(
+            owner_address,
+            jetton_master_address,
+            jetton_platform_code
+        )
+    );
 }
 
 (cell, cell, int, int, int) parse_jetton_info(cell info) inline {

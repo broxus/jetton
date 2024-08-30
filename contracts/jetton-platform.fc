@@ -1,0 +1,163 @@
+;; Made with ❤️ by Broxus to save TON community
+
+#include "imports/stdlib.fc";
+#include "imports/jetton-utils.fc";
+
+#pragma version >=0.2.0;
+
+;; dummy function for compiler which won't be executed
+;; see jetton-wallet.fc#receive_tokens
+() receive_tokens(
+    slice in_msg_body,
+    slice sender_address,
+    int my_ton_balance,
+    int fwd_fee,
+    int msg_value
+) impure method_id(1666) {
+    throw(0xffff);
+}
+
+(int) is_valid_sender(
+    slice sender_address,
+    slice jetton_master,
+    cell jetton_platform_code,
+    cell master_msg
+) inline {
+    ;; deployWallet() or mint()
+    if (equal_slices(sender_address, jetton_master)) {
+        return -1;
+    }
+
+    ;; can not get expected wallet without wallet owner
+    if (master_msg.cell_null?()) {
+        return 0;
+    }
+
+    slice ms = master_msg.begin_parse();
+
+    ms~load_uint(32); ;; op
+    ms~load_uint(64); ;; query id
+    ms~load_grams(); ;; amount
+
+    slice expected_wallet = calculate_user_jetton_wallet_address(
+        ms~load_msg_addr(), ;; owner of sender wallet
+        jetton_master,
+        jetton_platform_code
+    );
+
+    return equal_slices(sender_address, expected_wallet);
+}
+
+() refund_gas_and_destroy(slice remaining_gas_to) impure {
+    cell msg = begin_cell()
+        .store_uint(0x10, 6) ;; bounce - false
+        .store_slice(remaining_gas_to)
+        .store_coins(0)
+        .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1) ;; init - false, inplace - true
+        .end_cell();
+
+    ;; use all contract's balance + destroy if balance is 0 after tx
+    send_raw_message(msg, 128 + 32);
+}
+
+() recv_internal(
+    int my_balance,
+    int msg_value,
+    cell in_msg_full,
+    slice in_msg_body
+) impure {
+    ;; ignore empty messages
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+
+    slice cs = in_msg_full.begin_parse();
+
+    cs~load_uint(4); ;; skip msg type, ihr and bounce flags
+
+    slice sender_address = cs~load_msg_addr();
+
+    ;; data to upgrade this contract to jetton-wallet.fc
+    slice upgrade_msg = in_msg_body~load_ref().begin_parse();
+
+    cell wallet_code = upgrade_msg~load_ref();
+    int wallet_version = upgrade_msg~load_uint(32);
+    slice remaining_gas_to = upgrade_msg~load_msg_addr();
+
+    ;; internal_transfer message
+    cell master_msg = in_msg_body~load_maybe_ref();
+
+    slice ds = get_data().begin_parse();
+
+    (
+        int balance,
+        slice owner,
+        slice jetton_master,
+        cell empty_wallet_code,
+        cell platform_code,
+        int zero_version
+    ) = (
+        ds~load_coins(),
+        ds~load_msg_addr(),
+        ds~load_msg_addr(),
+        ds~load_ref(),
+        ds~load_ref(),
+        ds~load_uint(32)
+    );
+
+    ifnot (
+        is_valid_sender(
+            sender_address,
+            jetton_master,
+            platform_code,
+            master_msg
+        )
+    ) {
+        refund_gas_and_destroy(remaining_gas_to);
+
+        return ();
+    }
+
+    ;; set valid wallet_code and version
+    set_data(
+        pack_jetton_wallet_data(
+            balance,
+            owner,
+            jetton_master,
+            wallet_code,
+            platform_code,
+            wallet_version
+        )
+    );
+
+    ;; update contract's code for future txs
+    set_code(wallet_code);
+
+    ;; jetton wallet is deployed and no extra action
+    if (master_msg.cell_null?()) {
+        return ();
+    }
+
+    ;; update contract's code for current receive_tokens() call. God bless us!!!
+    set_c3(wallet_code.begin_parse().bless());
+
+    cs~load_msg_addr(); ;; skip dst
+    cs~load_coins(); ;; skip value
+    cs~skip_bits(1); ;; skip extracurrency collection
+    cs~load_coins(); ;; skip ihr_fee
+
+    int fwd_fee = muldiv(cs~load_coins(), 3, 2); ;; we use message fwd_fee for estimation of forward_payload costs
+
+    slice ms = master_msg.begin_parse();
+
+    ms~load_uint(32); ;; skip op
+
+    ;; for newly deployed jetton wallet only receive_tokens() call is possible
+    receive_tokens(
+        ms,
+        sender_address,
+        my_balance,
+        fwd_fee,
+        msg_value
+    );
+}

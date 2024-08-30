@@ -1,16 +1,63 @@
 // https://ton.org/docs/#/overviews/TL-B
 // base types defined in https://github.com/ton-blockchain/ton/blob/master/crypto/block/block.tlb
 
+//
+// dependson "block.tlb"
+//
+
 // storage (according to save_data() contract method)
 
-storage#_ balance:Grams owner_address:MsgAddressInt jetton_master_address:MsgAddressInt jetton_wallet_code:^Cell = Storage
+storage#_
+    balance: Grams
+    owner_address: MsgAddressInt
+    jetton_master_address: MsgAddressInt
+    jetton_wallet_code: ^Cell
+    jetton_platform_code: ^Cell
+    wallet_version: uint32
+    = Storage;
 
 // ops
 
-transfer query_id:uint64 amount:VarUInteger 16 destination:MsgAddress response_destination:MsgAddress custom_payload:Maybe ^Cell forward_ton_amount:VarUInteger 16 forward_payload:Either Cell ^Cell = InternalMsgBody
+transfer
+    query_id: uint64
+    amount: VarUInteger 16
+    destination: MsgAddress
+    response_destination: MsgAddress
+    custom_payload: Maybe ^Cell
+    forward_ton_amount: VarUInteger 16
+    forward_payload: Either Cell ^Cell
+    = InternalMsgBody;
 
-burn query_id:uint64 amount:VarUInteger 16 response_destination:MsgAddress custom_payload:Maybe ^Cell = InternalMsgBody
+burn
+    query_id: uint64
+    amount: VarUInteger 16
+    response_destination: MsgAddress
+    custom_payload: Maybe ^Cell
+    remaining_gas_to: Either MsgAddress ^MsgAddress
+    = InternalMsgBody;
 
-internal_transfer query_id:uint64 amount:VarUInteger 16 from:MsgAddress response_address:MsgAddress forward_ton_amount:VarUInteger 16 forward_payload:Either Cell ^Cell = InternalMsgBody
+internal_transfer
+    query_id: uint64
+    amount: VarUInteger 16
+    from: MsgAddress
+    response_address: MsgAddress
+    forward_ton_amount: VarUInteger 16
+    forward_payload: Either Cell ^Cell
+    = InternalMsgBody;
 
-burn_notification query_id:uint64 amount:VarUInteger 16 sender:MsgAddress response_destination:MsgAddress = InternalMsgBody
+upgrade_wallet#7d6ff254
+    query_id: uint64
+    remaining_gas_to: MsgAddress
+    = InternalMsgBody;
+
+wallet_accept_upgrade#03369199
+    query_id: uint64
+    remaining_gas_to: MsgAddress
+    wallet_code: ^Cell
+    version: uint32
+    = InternalMsgBody;
+
+drain#1ea60eff
+    query_id: uint64
+    remaining_gas_to: MsgAddress
+    = InternalMsgBody;

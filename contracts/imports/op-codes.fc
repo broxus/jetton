@@ -5,6 +5,15 @@ int op::excesses() asm "0xd53276db PUSHINT";
 int op::burn() asm "0x595f07bc PUSHINT";
 int op::burn_notification() asm "0x7bdd97de PUSHINT";
 int op::on_accept_tokens_burn() asm "0x68088d9b PUSHINT";
+int op::upgrade_wallet() asm "0x7d6ff254 PUSHINT";
+int op::wallet_accept_upgrade() asm "0x03369199 PUSHINT";
 
 ;; Minter
 int op::mint() asm "21 PUSHINT";
+int op::set_wallet_code() asm "0x71ede38c PUSHINT";
+int op::deploy_wallet() asm "0x6f8fc501 PUSHINT";
+int op::upgrade_minter() asm "0x17230c3a PUSHINT";
+int op::wallet_request_upgrade() asm "0x14fdada0 PUSHINT";
+
+;; Common
+int op::drain() asm "0x1ea60eff PUSHINT";

@@ -12,6 +12,7 @@ import { JettonWallet } from "./lib/jetton-wallet";
 import {
   JETTON_WALLET_CODE,
   JETTON_MINTER_CODE,
+  JETTON_PLATFORM_CODE,
   jettonMinterInitData,
 } from "../build/jetton-minter.deploy";
 
@@ -27,12 +28,14 @@ describe("Jetton", () => {
     jettonMasterAddress: Address
   ): Promise<JettonWallet> =>
     await JettonWallet.create(
-      JETTON_WALLET_CODE,
+      JETTON_PLATFORM_CODE,
       beginCell()
         .storeCoins(0)
         .storeAddress(walletOwnerAddress)
         .storeAddress(jettonMasterAddress)
-        .storeRef(JETTON_WALLET_CODE)
+        .storeRef(beginCell().endCell())
+        .storeRef(JETTON_PLATFORM_CODE)
+        .storeUint(0, 32)
         .endCell()
     );
 
@@ -68,6 +71,9 @@ describe("Jetton", () => {
 
   it("should get jwallet initialization data correctly", async () => {
     const jwallet = await getJWalletContract(PARTICIPANT_ADDRESS_1, minterContract.address);
+
+    jwallet.contract.setCodeCell(JETTON_WALLET_CODE);
+
     const jwalletDetails = parseJettonWalletDetails(
       await jwallet.contract.invokeGetMethod("get_wallet_data", [])
     );
@@ -89,6 +95,8 @@ describe("Jetton", () => {
     );
 
     const jwallet1 = await getJWalletContract(PARTICIPANT_ADDRESS_1, minterContract.address);
+
+    jwallet1.contract.setCodeCell(JETTON_WALLET_CODE);
 
     const { balance: balanceInitial } = parseJettonWalletDetails(
       await jwallet1.contract.invokeGetMethod("get_wallet_data", [])

@@ -1,3 +1,6 @@
+#include "params.fc";
+#include "stdlib.fc";
+
 ;; moved to the separate file to keep hex of the previous codes unchanged
 
 int op::provide_wallet_address() asm "0x2c76b973 PUSHINT";
