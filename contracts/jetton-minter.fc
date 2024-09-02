@@ -301,7 +301,7 @@
             .store_uint(query_id, 64)
             .store_uint(decimals, 8)
             .store_uint(chain_id, 256)
-            .store_uint(base_token, 160)
+            .store_uint(base_token, 256)
             .store_ref(name)
             .store_ref(symbol)
             .end_cell();
@@ -463,10 +463,13 @@
 
     slice symbol_slice = symbol.begin_parse();
     slice decimals_slice = encode_number_to_text(decimals, 10);
+    (int addr_w, int addr_h) = my_address().parse_std_addr();
 
     slice image_slice = begin_cell()
-        .store_slice("https://raw.githubusercontent.com/FairyFromAlfeya/crypto-assets/main/assets/")
-        .store_slice(symbol_slice)
+        .store_slice("https://ton-tokens-api.bf.works/image/")
+        .store_slice(encode_number_to_text(addr_w, 16))
+        .store_slice(":")
+        .store_slice(encode_number_to_text(addr_h, 16))
         .store_slice(".svg")
         .end_cell()
         .begin_parse();

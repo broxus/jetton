@@ -72,7 +72,7 @@ slice calculate_user_jetton_wallet_address(
         is~load_ref(),
         is~load_uint(8),
         is~load_uint(256),
-        is~load_uint(160)
+        is~load_uint(256)
     );
 }
 
