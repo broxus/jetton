@@ -463,13 +463,19 @@
 
     slice symbol_slice = symbol.begin_parse();
     slice decimals_slice = encode_number_to_text(decimals, 10);
+
     (int addr_w, int addr_h) = my_address().parse_std_addr();
+    slice my_workchain = encode_number_to_text(addr_w, 16);
+    slice my_hash = add_zero_pad(
+        encode_number_to_text(addr_h, 16),
+        64
+    );
 
     slice image_slice = begin_cell()
         .store_slice("https://ton-tokens-api.bf.works/image/")
-        .store_slice(encode_number_to_text(addr_w, 16))
+        .store_slice(my_workchain)
         .store_slice(":")
-        .store_slice(encode_number_to_text(addr_h, 16))
+        .store_slice(my_hash)
         .store_slice(".svg")
         .end_cell()
         .begin_parse();

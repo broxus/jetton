@@ -129,7 +129,7 @@ export function jettonMinterInitData(
     .storeRef(beginCell().storeBuffer(Buffer.from(metadata.name || "", "utf8")).endCell())
     .storeRef(beginCell().storeBuffer(Buffer.from(metadata.symbol || "", "utf8")).endCell())
     .storeUint8(9)
-    .storeUint(157, 256)
+    .storeUint(32, 256)
     .storeUint(228, 256)
     .endCell();
 

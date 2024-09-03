@@ -96,6 +96,27 @@ slice encode_number_to_text(int decimals, int radix) {
     return str.end_cell().begin_parse();
 }
 
+slice add_zero_pad(slice data, int byte_size) {
+    int pad_zeros_count = byte_size - slice_bits(data) / 8;
+
+    if (pad_zeros_count > 0) {
+        builder str = begin_cell();
+
+        repeat (pad_zeros_count) {
+            str = str.store_uint(48, 8);
+            pad_zeros_count -= 1;
+        }
+
+        return begin_cell()
+            .store_builder(str)
+            .store_slice(data)
+            .end_cell()
+            .begin_parse();
+    }
+
+    return data;
+}
+
 cell pack_metadata_value(slice a) inline {
     return begin_cell().store_uint(0, 8).store_slice(a).end_cell();
 }
