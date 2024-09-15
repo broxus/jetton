@@ -26,12 +26,16 @@ async function main() {
 
   // make sure func compiler is available
   const minSupportFunc = "0.2.0";
+
   try {
     const funcVersion = child_process
       .execSync("func -V")
       .toString()
       .match(/semantic version: v([0-9.]+)/)?.[1];
-    if (!semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc)) throw new Error("Nonexistent version or outdated");
+
+    if (!semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc)) {
+      throw new Error("Nonexistent version or outdated");
+    }
   } catch (e) {
     console.log(`\nFATAL ERROR: 'func' with version >= ${minSupportFunc} executable is not found, is it installed and in path?`);
     process.exit(1);
@@ -39,9 +43,13 @@ async function main() {
 
   // make sure fift cli is available
   let fiftVersion = "";
+
   try {
     fiftVersion = child_process.execSync("fift -V").toString();
-  } catch (e) {}
+  } catch (e) {
+    console.error(e);
+  }
+
   if (!fiftVersion.includes("Fift build information")) {
     console.log("\nFATAL ERROR: 'fift' executable is not found, is it installed and in path?");
     process.exit(1);
@@ -49,6 +57,7 @@ async function main() {
 
   // go over all the root contracts in the contracts directory
   const rootContracts = glob.sync(["contracts/*.fc", "contracts/*.func"]);
+
   for (const rootContract of rootContracts) {
     // compile a new root contract
     console.log(`\n* Found root contract '${rootContract}' - let's compile it:`);
@@ -56,26 +65,35 @@ async function main() {
 
     // delete existing build artifacts
     const fiftArtifact = `build/${contractName}.fif`;
+
     if (fs.existsSync(fiftArtifact)) {
       console.log(` - Deleting old build artifact '${fiftArtifact}'`);
       fs.unlinkSync(fiftArtifact);
     }
+
     const mergedFuncArtifact = `build/${contractName}.merged.fc`;
+
     if (fs.existsSync(mergedFuncArtifact)) {
       console.log(` - Deleting old build artifact '${mergedFuncArtifact}'`);
       fs.unlinkSync(mergedFuncArtifact);
     }
+
     const fiftCellArtifact = `build/${contractName}.cell.fif`;
+
     if (fs.existsSync(fiftCellArtifact)) {
       console.log(` - Deleting old build artifact '${fiftCellArtifact}'`);
       fs.unlinkSync(fiftCellArtifact);
     }
+
     const cellArtifact = `build/${contractName}.cell`;
+
     if (fs.existsSync(cellArtifact)) {
       console.log(` - Deleting old build artifact '${cellArtifact}'`);
       fs.unlinkSync(cellArtifact);
     }
+
     const hexArtifact = `build/${contractName}.compiled.json`;
+
     if (fs.existsSync(hexArtifact)) {
       console.log(` - Deleting old build artifact '${hexArtifact}'`);
       fs.unlinkSync(hexArtifact);
@@ -83,15 +101,17 @@ async function main() {
 
     // check if we have a tlb file
     const tlbFile = `contracts/${contractName}.tlb`;
+
     if (fs.existsSync(tlbFile)) {
       console.log(` - TL-B file '${tlbFile}' found, calculating crc32 on all ops..`);
       const tlbContent = fs.readFileSync(tlbFile).toString();
-      const tlbOpMessages = tlbContent.match(/^(\w+).*=\s*InternalMsgBody$/gm) ?? [];
+      const tlbOpMessages = tlbContent.match(/^(\w+)[\w\s:^]*=\s*InternalMsgBody;?$/gm) ?? [];
+
       for (const tlbOpMessage of tlbOpMessages) {
         const crc = crc32(tlbOpMessage);
         const asQuery = `0x${(crc & 0x7fffffff).toString(16)}`;
         const asResponse = `0x${((crc | 0x80000000) >>> 0).toString(16)}`;
-        console.log(`   op '${tlbOpMessage.split(" ")[0]}': '${asQuery}' as query (&0x7fffffff), '${asResponse}' as response (|0x80000000)`);
+        console.log(`   op '${tlbOpMessage.split(/[ \n]/)[0]}': '${asQuery}' as query (&0x7fffffff), '${asResponse}' as response (|0x80000000)`);
       }
     } else {
       console.log(` - Warning: TL-B file for contract '${tlbFile}' not found, are your op consts according to standard?`);
@@ -100,11 +120,15 @@ async function main() {
     // run the func compiler to create a fif file
     console.log(` - Trying to compile '${rootContract}' with 'func' compiler..`);
     let buildErrors: string;
+
     try {
       buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${rootContract} 2>&1 1>node_modules/.tmpfunc`).toString();
     } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       buildErrors = e.stdout.toString();
     }
+
     if (buildErrors.length > 0) {
       console.log(" - OH NO! Compilation Errors! The compiler output was:");
       console.log(`\n${buildErrors}`);
@@ -122,7 +146,7 @@ async function main() {
     }
 
     // create a temp cell.fif that will generate the cell
-    let fiftCellSource = '"Asm.fif" include\n';
+    let fiftCellSource = "\"Asm.fif\" include\n";
     fiftCellSource += `${fs.readFileSync(fiftArtifact).toString()}\n`;
     fiftCellSource += `boc>B "${cellArtifact}" B>file`;
     fs.writeFileSync(fiftCellArtifact, fiftCellSource);
@@ -146,10 +170,14 @@ async function main() {
       console.log(` - Build artifact created '${cellArtifact}'`);
     }
 
+    const codeHash = Cell.fromBoc(fs.readFileSync(cellArtifact))[0].hash();
+
     fs.writeFileSync(
       hexArtifact,
       JSON.stringify({
         hex: Cell.fromBoc(fs.readFileSync(cellArtifact))[0].toBoc().toString("hex"),
+        hash: codeHash.toString("hex"),
+        hashBase64: codeHash.toString("base64"),
       })
     );
 
@@ -168,16 +196,28 @@ async function main() {
   console.log("");
 }
 
-main();
+main().then(() => console.log("Success"));
 
 // helpers
 
 function crc32(r: string) {
-  for (var a, o = [], c = 0; c < 256; c++) {
+  const o = [];
+
+  for (let a, c = 0; c < 256; c++) {
     a = c;
-    for (let f = 0; f < 8; f++) a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
+
+    for (let f = 0; f < 8; f++) {
+      a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
+    }
+
     o[c] = a;
   }
-  for (var n = -1, t = 0; t < r.length; t++) n = (n >>> 8) ^ o[255 & (n ^ r.charCodeAt(t))];
+
+  let n = -1;
+
+  for (let t = 0; t < r.length; t++) {
+    n = (n >>> 8) ^ o[255 & (n ^ r.charCodeAt(t))];
+  }
+
   return (-1 ^ n) >>> 0;
 }
