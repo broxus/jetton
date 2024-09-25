@@ -59,7 +59,7 @@ describe("Jetton", () => {
     expect(address.toFriendly()).to.equal(OWNER_ADDRESS.toFriendly());
     expect(metadata.name).to.equal("jUSDT");
     expect(metadata.symbol).to.equal("USDT");
-    expect(metadata.image).to.equal("https://ton-tokens-api.bf.works/image/0:097f19724f586137687a29d668725d5373dd99653c814e187b9a4332e2263436.svg");
+    expect(metadata.image).to.equal("https://ton-tokens-api.bf.works/image/0:a55c87b496f90f7fb4fa10e31eb4f96e63899979b7c073a2b2f7c4f9b40b3bdb.svg");
     expect(metadata.decimals).to.equal("9");
   });
 
