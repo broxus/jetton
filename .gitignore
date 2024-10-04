@@ -10,3 +10,4 @@ lib/cmd_temp.ts
 dist
 *.tgz
 .idea
+.vscode
