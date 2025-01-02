@@ -135,7 +135,7 @@
     set_code(wallet_code);
 
     ;; jetton wallet is deployed and no extra action
-    if (origin_msg.cell_null?()) {
+    if (origin_msg.begin_parse().slice_data_empty?()) {
         return ();
     }
 
