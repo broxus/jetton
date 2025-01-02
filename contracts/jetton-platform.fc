@@ -71,21 +71,22 @@
         return ();
     }
 
+    cell origin_msg = begin_cell().store_slice(in_msg_body).end_cell();
+
     slice cs = in_msg_full.begin_parse();
 
     cs~load_uint(4); ;; skip msg type, ihr and bounce flags
 
     slice sender_address = cs~load_msg_addr();
 
+    ;; ref(wallet_code) + slice(payload)
+    slice cps = in_msg_body~load_ref().begin_parse();
     ;; data to upgrade this contract to jetton-wallet.fc
-    slice upgrade_msg = in_msg_body~load_ref().begin_parse();
+    slice upgrade_msg = cps~load_ref().begin_parse();
 
     cell wallet_code = upgrade_msg~load_ref();
     int wallet_version = upgrade_msg~load_uint(32);
     slice remaining_gas_to = upgrade_msg~load_msg_addr();
-
-    ;; internal_transfer message
-    cell master_msg = in_msg_body~load_maybe_ref();
 
     slice ds = get_data().begin_parse();
 
@@ -110,7 +111,7 @@
             sender_address,
             jetton_master,
             platform_code,
-            master_msg
+            origin_msg
         )
     ) {
         refund_gas_and_destroy(remaining_gas_to);
@@ -134,7 +135,7 @@
     set_code(wallet_code);
 
     ;; jetton wallet is deployed and no extra action
-    if (master_msg.cell_null?()) {
+    if (origin_msg.cell_null?()) {
         return ();
     }
 
@@ -148,7 +149,7 @@
 
     int fwd_fee = muldiv(cs~load_coins(), 3, 2); ;; we use message fwd_fee for estimation of forward_payload costs
 
-    slice ms = master_msg.begin_parse();
+    slice ms = origin_msg.begin_parse();
 
     ms~load_uint(32); ;; skip op
 

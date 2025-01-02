@@ -73,10 +73,49 @@
         .store_ref(jetton_wallet_code)
         .end_cell();
 
-    var upgrade_and_master_msg = begin_cell()
-        .store_ref(upgrade_msg)
-        .store_maybe_ref(master_msg)
-        .end_cell();
+    ;; deploy + internal_transfer
+    ifnot (master_msg.cell_null?()) {
+        var ms = master_msg.begin_parse();
+
+        (
+            int op,
+            int queryId,
+            int amount,
+            slice fromAddress,
+            slice responseAddress,
+            int forwardAmount
+        ) = (
+            ms~load_uint(32),
+            ms~load_uint(64),
+            ms~load_coins(),
+            ms~load_msg_addr(),
+            ms~load_msg_addr(),
+            ms~load_coins()
+        );
+
+        var upgrade_and_payload = begin_cell()
+            .store_ref(upgrade_msg)
+            .store_slice(ms)
+            .end_cell();
+
+        master_msg = begin_cell()
+            .store_uint(op, 32)
+            .store_uint(queryId, 64)
+            .store_coins(amount)
+            .store_slice(fromAddress)
+            .store_slice(responseAddress)
+            .store_coins(forwardAmount)
+            .store_ref(upgrade_and_payload)
+            .end_cell();
+    } else {
+        var upgrade_and_payload = begin_cell()
+            .store_ref(upgrade_msg)
+            .end_cell();
+
+        master_msg = begin_cell()
+            .store_ref(upgrade_and_payload)
+            .end_cell();
+    }
 
     var msg = begin_cell()
         .store_uint(0x18, 6)
@@ -84,7 +123,7 @@
         .store_coins(0)
         .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
         .store_ref(state_init)
-        .store_ref(upgrade_and_master_msg)
+        .store_ref(master_msg)
         .end_cell();
 
     send_raw_message(msg, 64); ;; use remaining gas from inbound message, revert on errors

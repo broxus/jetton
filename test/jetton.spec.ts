@@ -59,7 +59,7 @@ describe("Jetton", () => {
     expect(address.toFriendly()).to.equal(OWNER_ADDRESS.toFriendly());
     expect(metadata.name).to.equal("jUSDT");
     expect(metadata.symbol).to.equal("USDT");
-    expect(metadata.image).to.equal("https://ton-tokens-api.bf.works/image/0:a55c87b496f90f7fb4fa10e31eb4f96e63899979b7c073a2b2f7c4f9b40b3bdb.svg");
+    expect(metadata.image).to.equal("https://ton-tokens-api.bf.works/image/0:9b9649e529b058b35dc09b7ba2c9c338e33a568873552aefe46822370fbe05b7.svg");
     expect(metadata.decimals).to.equal("9");
   });
 
@@ -113,7 +113,7 @@ describe("Jetton", () => {
     );
     expect(balanceAfter).to.bignumber.equal(
       toNano(0.01),
-      "jwallet1 should reflact its balance after mint"
+      "jwallet1 should reflect its balance after mint"
     );
 
     let { totalSupply } = parseJettonDetails(

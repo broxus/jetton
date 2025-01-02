@@ -121,6 +121,17 @@ const gas_consumption = 10000000; ;; 0.01 TON
 
     slice either_forward_payload = in_msg_body;
 
+    var upgrade_msg = begin_cell()
+        .store_uint(wallet_version, 32)
+        .store_slice(response_address)
+        .store_ref(jetton_wallet_code)
+        .end_cell();
+
+    var upgrade_and_payload = begin_cell()
+        .store_ref(upgrade_msg)
+        .store_slice(either_forward_payload)
+        .end_cell();
+
     var master_msg = begin_cell()
         .store_uint(op::internal_transfer(), 32)
         .store_uint(query_id, 64)
@@ -128,18 +139,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
         .store_slice(owner_address)
         .store_slice(response_address)
         .store_coins(forward_ton_amount)
-        .store_slice(either_forward_payload)
-        .end_cell();
-
-    var upgrade_msg = begin_cell()
-        .store_uint(wallet_version, 32)
-        .store_slice(response_address)
-        .store_ref(jetton_wallet_code)
-        .end_cell();
-
-    var upgrade_and_master_msg = begin_cell()
-        .store_ref(upgrade_msg)
-        .store_maybe_ref(master_msg)
+        .store_ref(upgrade_and_payload)
         .end_cell();
 
     var msg = begin_cell()
@@ -148,7 +148,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
         .store_coins(0)
         .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
         .store_ref(state_init)
-        .store_ref(upgrade_and_master_msg)
+        .store_ref(master_msg)
         .end_cell();
 
     int fwd_count = forward_ton_amount ? 2 : 1;
@@ -232,7 +232,12 @@ const gas_consumption = 10000000; ;; 0.01 TON
     raw_reserve(max(ton_balance_before_msg, min_tons_for_storage), 2);
 
     if (forward_ton_amount) {
-        slice either_forward_payload = in_msg_body;
+        slice upgrade_and_payload = in_msg_body~load_ref().begin_parse();
+
+        ;; skip wallet code for upgrade
+        upgrade_and_payload~load_ref();
+
+        slice either_forward_payload = upgrade_and_payload;
 
         var msg_body = begin_cell()
             .store_uint(op::transfer_notification(), 32)
@@ -487,19 +492,6 @@ const gas_consumption = 10000000; ;; 0.01 TON
     cs~skip_bits(1); ;; skip extracurrency collection
     cs~load_coins(); ;; skip ihr_fee
     int fwd_fee = muldiv(cs~load_coins(), 3, 2); ;; we use message fwd_fee for estimation of forward_payload costs
-
-    ;; code + master msg
-    if (slice_bits(in_msg_body) == 1) {
-        in_msg_body~load_ref(); ;; wallet code + version
-
-        cell master_msg = in_msg_body~load_maybe_ref();
-
-        if (master_msg.cell_null?()) {
-            return ();
-        }
-
-        in_msg_body = master_msg.begin_parse();
-    }
 
     int op = in_msg_body~load_uint(32);
 
