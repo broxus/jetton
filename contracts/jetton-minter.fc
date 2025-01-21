@@ -511,7 +511,7 @@
     );
 
     slice image_slice = begin_cell()
-        .store_slice("https://ton-tokens-api.bf.works/image/")
+        .store_slice("https://ton-tokens-meta.chainconnect.com/image/")
         .store_slice(my_workchain)
         .store_slice(":")
         .store_slice(my_hash)
