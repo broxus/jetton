@@ -328,10 +328,10 @@
             cell symbol,
             int decimals,
             int chain_id,
-            int base_token
+            slice base_token
         ) = parse_jetton_info(content);
 
-        var msg = begin_cell()
+        builder msg_builder = begin_cell()
             .store_uint(0x18, 6)
             .store_slice(sender_address)
             .store_coins(0)
@@ -340,10 +340,15 @@
             .store_uint(query_id, 64)
             .store_uint(decimals, 8)
             .store_uint(chain_id, 256)
-            .store_uint(base_token, 256)
+            .store_slice(base_token)
             .store_ref(name)
-            .store_ref(symbol)
-            .end_cell();
+            .store_ref(symbol);
+
+        if (in_msg_body.slice_refs()) {
+            cell payload = in_msg_body~load_ref();
+            msg_builder = msg_builder.store_ref(payload);
+        }
+        var msg = msg_builder.end_cell();
 
         send_raw_message(msg, 64);
 
@@ -497,7 +502,7 @@
         cell symbol,
         int decimals,
         int chain_id,
-        int base_token
+        slice base_token
     ) = parse_jetton_info(content);
 
     slice symbol_slice = symbol.begin_parse();
@@ -540,7 +545,7 @@
     );
 }
 
-(cell, cell, int, int, int) get_jetton_meta() method_id {
+(cell, cell, int, int, slice) get_jetton_meta() method_id {
     (
         int total_supply,
         slice admin_address,
