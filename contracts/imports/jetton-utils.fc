@@ -64,14 +64,15 @@ slice calculate_user_jetton_wallet_address(
     );
 }
 
-(cell, cell, int, int, slice) parse_jetton_info(cell info) inline {
+(cell, cell, int, int, slice, slice) parse_jetton_info(cell info) inline {
     slice is = info.begin_parse();
 
     return (
         is~load_ref(),
         is~load_ref(),
         is~load_uint(8),
-        is~load_uint(256),
+        is~load_int(32),
+        is~load_msg_addr(),
         is~load_msg_addr()
     );
 }

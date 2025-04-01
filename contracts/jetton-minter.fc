@@ -328,7 +328,8 @@
             cell symbol,
             int decimals,
             int chain_id,
-            slice base_token
+            slice base_token,
+            slice native_proxy_wallet
         ) = parse_jetton_info(content);
 
         builder msg_builder = begin_cell()
@@ -341,6 +342,7 @@
             .store_uint(decimals, 8)
             .store_int(chain_id, 32)
             .store_slice(base_token)
+            .store_slice(native_proxy_wallet)
             .store_ref(name)
             .store_ref(symbol);
 
@@ -502,7 +504,8 @@
         cell symbol,
         int decimals,
         int chain_id,
-        slice base_token
+        slice base_token,
+        slice native_proxy_wallet
     ) = parse_jetton_info(content);
 
     slice symbol_slice = symbol.begin_parse();
@@ -545,7 +548,7 @@
     );
 }
 
-(cell, cell, int, int, slice) get_jetton_meta() method_id {
+(cell, cell, int, int, slice, slice) get_jetton_meta() method_id {
     (
         int total_supply,
         slice admin_address,
