@@ -1,4 +1,4 @@
-# jetton-contracts-2.0
+# tvm-tvm bridge jetton-contracts
 
 ## Build and test
 
