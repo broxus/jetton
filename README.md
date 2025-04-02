@@ -1,4 +1,4 @@
-# jetton-contracts-2.0
+# bridge jetton-contracts 
 
 ## Build and test
 
