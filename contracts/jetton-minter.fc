@@ -336,7 +336,7 @@
             .store_slice(native_proxy_wallet)
             .end_cell();
 
-        builder msg_builder = begin_cell()
+        cell msg = begin_cell()
             .store_uint(0x18, 6)
             .store_slice(sender_address)
             .store_coins(0)
@@ -348,13 +348,9 @@
             .store_slice(base_token)
             .store_ref(name)
             .store_ref(symbol)
-            .store_ref(additional_info);
-
-        if (in_msg_body.slice_refs()) {
-            cell payload = in_msg_body~load_ref();
-            msg_builder = msg_builder.store_ref(payload);
-        }
-        var msg = msg_builder.end_cell();
+            .store_ref(additional_info)
+            .store_maybe_ref(in_msg_body~load_ref())
+            .end_cell();
 
         send_raw_message(msg, 64);
 
