@@ -332,6 +332,10 @@
             slice native_proxy_wallet
         ) = parse_jetton_info(content);
 
+        cell additional_info = begin_cell()
+            .store_slice(native_proxy_wallet)
+            .end_cell();
+
         builder msg_builder = begin_cell()
             .store_uint(0x18, 6)
             .store_slice(sender_address)
@@ -342,9 +346,9 @@
             .store_uint(decimals, 8)
             .store_int(chain_id, 32)
             .store_slice(base_token)
-            .store_slice(native_proxy_wallet)
             .store_ref(name)
-            .store_ref(symbol);
+            .store_ref(symbol)
+            .store_ref(additional_info);
 
         if (in_msg_body.slice_refs()) {
             cell payload = in_msg_body~load_ref();
