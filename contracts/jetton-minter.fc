@@ -349,7 +349,7 @@
             .store_ref(name)
             .store_ref(symbol)
             .store_ref(additional_info)
-            .store_maybe_ref(in_msg_body~load_dict())
+            .store_maybe_ref(in_msg_body~load_maybe_ref())
             .end_cell();
 
         send_raw_message(msg, 64);
